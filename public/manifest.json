@@ -1,0 +1,41 @@
+{
+  "name": "PPT遥控器 - 演讲者的隐形提词助手",
+  "short_name": "PPT遥控器",
+  "description": "手机控制PPT翻页 + 题词提示器 - 演讲者的隐形提词助手",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png", 
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "business", "education"],
+  "shortcuts": [
+    {
+      "name": "开始演示",
+      "short_name": "演示",
+      "description": "快速开始新的PPT演示",
+      "url": "/present",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "控制台",
+      "short_name": "控制", 
+      "description": "手机端控制界面",
+      "url": "/control",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}
