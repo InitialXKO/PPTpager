@@ -1,31 +1,32 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { generateRoomCode, generateDefaultPresentation } from '@/utils';
-import { Play, Smartphone, Monitor, ArrowRight } from 'lucide-react';
+import { Play, Smartphone, Monitor, ArrowRight, Upload } from 'lucide-react';
+import PPTUploader from '@/components/PPTUploader';
+import { Presentation } from '@/types';
 
 export default function HomePage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [showUploader, setShowUploader] = useState(false);
 
-  const startPresentation = async () => {
+  const startPresentation = async (presentation?: Presentation) => {
     setIsLoading(true);
     try {
       const roomCode = generateRoomCode();
       const sessionData = {
         roomCode,
-        presentation: generateDefaultPresentation(),
+        presentation: presentation ?? generateDefaultPresentation(),
         createdAt: new Date().toISOString(),
       };
       
-      // 保存会话数据到本地存储
       localStorage.setItem('ppt_session', JSON.stringify(sessionData));
       
-      // 延迟一下让用户看到加载状态
       setTimeout(() => {
         router.push(`/present/${roomCode}`);
-      }, 1000);
+      }, 600);
     } catch (error) {
       console.error('启动演示失败:', error);
       setIsLoading(false);
@@ -34,6 +35,19 @@ export default function HomePage() {
 
   const goToController = () => {
     router.push('/control');
+  };
+
+  const handlePresentationLoaded = (presentation: Presentation) => {
+    setShowUploader(false);
+    startPresentation(presentation);
+  };
+
+  const openUploader = () => {
+    setShowUploader(true);
+  };
+
+  const closeUploader = () => {
+    setShowUploader(false);
   };
 
   return (
@@ -54,36 +68,67 @@ export default function HomePage() {
 
         {/* Quick Actions */}
         <div className="max-w-4xl mx-auto space-y-8">
-          {/* Start Presentation Button */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
-            <div className="text-center">
-              <Monitor className="w-16 h-16 text-primary-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                开始演示
-              </h2>
-              <p className="text-gray-600 mb-6">
-                创建新的PPT演示会话，生成房间二维码供手机连接
-              </p>
-              <button
-                onClick={startPresentation}
-                disabled={isLoading}
-                className="btn-primary inline-flex items-center gap-2 text-lg px-8 py-4"
-              >
-                {isLoading ? (
-                  <>
-                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    正在创建...
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-6 h-6" />
-                    开始演示
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
-              </button>
+          {/* Start Presentation Options */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Start with Default Presentation */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+              <div className="text-center">
+                <Play className="w-12 h-12 text-primary-500 mx-auto mb-3" />
+                <h2 className="text-xl font-semibold text-gray-900 mb-3">
+                  快速开始
+                </h2>
+                <p className="text-gray-600 text-sm mb-4">
+                  使用示例演示文稿快速开始
+                </p>
+                <button
+                  onClick={() => startPresentation()}
+                  disabled={isLoading}
+                  className="btn-primary w-full inline-flex items-center justify-center gap-2"
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      启动中...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-5 h-5" />
+                      开始演示
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Upload PPT */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+              <div className="text-center">
+                <Upload className="w-12 h-12 text-primary-500 mx-auto mb-3" />
+                <h2 className="text-xl font-semibold text-gray-900 mb-3">
+                  上传PPT
+                </h2>
+                <p className="text-gray-600 text-sm mb-4">
+                  上传您自己的PowerPoint文件
+                </p>
+                <button
+                  onClick={openUploader}
+                  disabled={isLoading}
+                  className="btn-secondary w-full inline-flex items-center justify-center gap-2"
+                >
+                  <Upload className="w-5 h-5" />
+                  选择文件
+                </button>
+              </div>
             </div>
           </div>
+
+          {/* PPT Uploader */}
+          {showUploader && (
+            <PPTUploader
+              onPresentationLoaded={handlePresentationLoaded}
+              onCancel={closeUploader}
+            />
+          )}
 
           {/* Controller Button */}
           <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
