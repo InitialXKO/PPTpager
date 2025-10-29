@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import { useEffect } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Presentation } from '@/types';
 
 interface SlideViewerProps {
@@ -15,6 +15,7 @@ export default function SlideViewer({
   currentSlide = 0,
   onSlideChange 
 }: SlideViewerProps) {
+  const totalSlides = presentation.slides.length;
   const slide = presentation.slides[currentSlide];
 
   const handlePrevious = () => {
@@ -24,28 +25,60 @@ export default function SlideViewer({
   };
 
   const handleNext = () => {
-    if (currentSlide < presentation.slides.length - 1) {
+    if (currentSlide < totalSlides - 1) {
       onSlideChange?.(currentSlide + 1);
     }
   };
 
-  const handleKeyPress = (event: KeyboardEvent) => {
-    switch (event.key) {
-      case 'ArrowLeft':
-        handlePrevious();
-        break;
-      case 'ArrowRight':
-      case ' ':
-        handleNext();
-        break;
-      case 'Home':
-        onSlideChange?.(0);
-        break;
-      case 'End':
-        onSlideChange?.(presentation.slides.length - 1);
-        break;
+  useEffect(() => {
+    if (!onSlideChange) {
+      return;
     }
-  };
+
+    const handleKeyPress = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target) {
+        const tagName = target.tagName.toLowerCase();
+        if (
+          target.isContentEditable ||
+          ['input', 'textarea', 'select', 'button'].includes(tagName)
+        ) {
+          return;
+        }
+      }
+
+      switch (event.key) {
+        case 'ArrowLeft':
+          if (currentSlide > 0) {
+            event.preventDefault();
+            onSlideChange(currentSlide - 1);
+          }
+          break;
+        case 'ArrowRight':
+        case ' ':
+          if (currentSlide < totalSlides - 1) {
+            event.preventDefault();
+            onSlideChange(currentSlide + 1);
+          }
+          break;
+        case 'Home':
+          event.preventDefault();
+          onSlideChange(0);
+          break;
+        case 'End':
+          if (totalSlides > 0) {
+            event.preventDefault();
+            onSlideChange(totalSlides - 1);
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [currentSlide, onSlideChange, totalSlides]);
 
   return (
     <div className="slide-container">

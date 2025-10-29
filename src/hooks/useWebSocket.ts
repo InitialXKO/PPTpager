@@ -16,6 +16,7 @@ export const useWebSocket = () => {
 
   const [presentation, setPresentation] = useState<Presentation | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const presentationRef = useRef<Presentation | null>(null);
 
   // 生成唯一设备ID
   const generateDeviceId = () => {
@@ -66,13 +67,51 @@ export const useWebSocket = () => {
       }));
     });
 
-    socketRef.current.on('slide_changed', (data: { slideNumber: number }) => {
-      setCurrentSlide(data.slideNumber);
+    socketRef.current.on('slide_changed', (payload: { slideNumber?: number }) => {
+      if (typeof payload?.slideNumber !== 'number' || Number.isNaN(payload.slideNumber)) {
+        return;
+      }
+
+      const currentPresentation = presentationRef.current;
+      const maxIndex = currentPresentation && currentPresentation.slides.length > 0
+        ? currentPresentation.slides.length - 1
+        : 0;
+
+      const nextSlide = Math.max(0, Math.min(payload.slideNumber, maxIndex));
+
+      setCurrentSlide(nextSlide);
+      setPresentation((prev) => {
+        if (!prev) {
+          return prev;
+        }
+        if (prev.currentSlide === nextSlide) {
+          return prev;
+        }
+        const updated = {
+          ...prev,
+          currentSlide: nextSlide,
+        };
+        presentationRef.current = updated;
+        return updated;
+      });
     });
 
     socketRef.current.on('presentation_loaded', (data: { presentation: Presentation }) => {
-      setPresentation(data.presentation);
-      setCurrentSlide(0);
+      const incoming = data.presentation;
+      const maxIndex = incoming.slides.length > 0 ? incoming.slides.length - 1 : 0;
+      const initialSlide =
+        typeof incoming.currentSlide === 'number'
+          ? Math.max(0, Math.min(incoming.currentSlide, maxIndex))
+          : 0;
+
+      const normalizedPresentation: Presentation = {
+        ...incoming,
+        currentSlide: initialSlide,
+      };
+
+      presentationRef.current = normalizedPresentation;
+      setPresentation(normalizedPresentation);
+      setCurrentSlide(initialSlide);
     });
 
     socketRef.current.on('error', (error: any) => {
@@ -104,27 +143,73 @@ export const useWebSocket = () => {
     }));
   }, [connectionState.deviceId]);
 
+  // 更新 presentationRef 当 presentation 变化时
+  useEffect(() => {
+    presentationRef.current = presentation;
+  }, [presentation]);
+
   // 发送幻灯片变化
   const changeSlide = useCallback((direction: 'next' | 'prev' | 'goto', slideNumber?: number) => {
     if (!socketRef.current?.connected || !connectionState.roomId) return;
 
-    const message = {
-      type: 'slide_change',
-      roomId: connectionState.roomId,
-      deviceId: connectionState.deviceId,
-      timestamp: Date.now(),
-      data: {
-        slideNumber: direction === 'goto' ? slideNumber : null,
-        direction,
-      },
-    };
+    const currentPresentation = presentationRef.current;
+    const totalSlides = currentPresentation?.slides.length ?? 0;
+    if (totalSlides === 0) return;
 
-    socketRef.current.emit('slide_change', message);
+    setCurrentSlide((prevSlide) => {
+      let targetSlide = prevSlide;
+
+      if (direction === 'goto' && typeof slideNumber === 'number') {
+        targetSlide = Math.max(0, Math.min(slideNumber, totalSlides - 1));
+      } else if (direction === 'next') {
+        targetSlide = Math.min(prevSlide + 1, totalSlides - 1);
+      } else if (direction === 'prev') {
+        targetSlide = Math.max(prevSlide - 1, 0);
+      }
+
+      if (targetSlide === prevSlide) {
+        return prevSlide;
+      }
+
+      const message = {
+        type: 'slide_change',
+        roomId: connectionState.roomId,
+        deviceId: connectionState.deviceId,
+        timestamp: Date.now(),
+        data: {
+          slideNumber: targetSlide,
+          direction,
+        },
+      };
+
+      socketRef.current?.emit('slide_change', message);
+
+      // 更新 presentation 的 currentSlide
+      setPresentation((prev) => {
+        if (!prev) {
+          return prev;
+        }
+        return {
+          ...prev,
+          currentSlide: targetSlide,
+        };
+      });
+
+      return targetSlide;
+    });
   }, [connectionState.roomId, connectionState.deviceId]);
 
   // 加载演示文稿
-  const loadPresentation = useCallback((presentation: Presentation) => {
+  const loadPresentation = useCallback((presentationData: Presentation) => {
     if (!socketRef.current?.connected || !connectionState.roomId) return;
+
+    const maxIndex = presentationData.slides.length > 0 ? presentationData.slides.length - 1 : 0;
+    const initialSlide = Math.max(0, Math.min(presentationData.currentSlide ?? 0, maxIndex));
+
+    const normalizedPresentation: Presentation = {
+      ...presentationData,
+      currentSlide: initialSlide,
+    };
 
     const message: ControlMessage = {
       type: 'presentation_load',
@@ -132,13 +217,14 @@ export const useWebSocket = () => {
       deviceId: connectionState.deviceId,
       timestamp: Date.now(),
       data: {
-        presentation,
+        presentation: normalizedPresentation,
       },
     };
 
     socketRef.current.emit('load_presentation', message);
-    setPresentation(presentation);
-    setCurrentSlide(0);
+    presentationRef.current = normalizedPresentation;
+    setPresentation(normalizedPresentation);
+    setCurrentSlide(initialSlide);
   }, [connectionState.roomId, connectionState.deviceId]);
 
   // 断开连接
