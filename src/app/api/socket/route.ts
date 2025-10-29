@@ -135,8 +135,6 @@ export async function GET(req: NextRequest) {
   return res;
 }
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+// Socket.io API routes need Node.js runtime
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';

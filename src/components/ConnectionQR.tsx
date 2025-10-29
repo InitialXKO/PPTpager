@@ -21,7 +21,6 @@ export default function ConnectionQR({ roomId, size = 200 }: ConnectionQRProps) 
       try {
         await QRCode.toCanvas(canvasRef.current, connectionUrl, {
           width: size,
-          height: size,
           margin: 2,
           color: {
             dark: '#1f2937',

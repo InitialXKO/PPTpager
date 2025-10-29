@@ -10,9 +10,9 @@ import ControllerInterface from '@/components/ControllerInterface';
 export default function ControlPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const roomFromUrl = searchParams.get('room');
+  const roomFromUrl = searchParams?.get('room') || '';
   
-  const [inputRoomId, setInputRoomId] = useState(roomFromUrl || '');
+  const [inputRoomId, setInputRoomId] = useState(roomFromUrl);
   const [isJoining, setIsJoining] = useState(false);
   const [error, setError] = useState('');
   

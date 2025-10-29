@@ -1,9 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  experimental: {
-    appDir: true,
-  },
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
@@ -23,7 +20,7 @@ const nextConfig = {
             value: 'require-corp',
           },
           {
-            key: 'Cross-Origin-Opener-Policy', 
+            key: 'Cross-Origin-Opener-Policy',
             value: 'same-origin',
           },
         ],

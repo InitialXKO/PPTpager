@@ -12,7 +12,7 @@ import ConnectionQR from '@/components/ConnectionQR';
 export default function PresentPage() {
   const params = useParams();
   const router = useRouter();
-  const roomId = params.roomId as string;
+  const roomId = params?.roomId as string || '';
   
   const {
     connect,
