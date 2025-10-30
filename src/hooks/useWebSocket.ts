@@ -24,8 +24,13 @@ export const useWebSocket = () => {
   };
 
   // 初始化连接
-  const connect = useCallback(() => {
-    if (socketRef.current?.connected) return;
+  const connect = useCallback((callback?: () => void) => {
+    if (socketRef.current?.connected) {
+      if (callback) {
+        callback();
+      }
+      return;
+    }
 
     const deviceId = localStorage.getItem('deviceId') || generateDeviceId();
     localStorage.setItem('deviceId', deviceId);
@@ -42,6 +47,9 @@ export const useWebSocket = () => {
         deviceId,
         isConnected: true,
       }));
+      if (callback) {
+        callback();
+      }
     });
 
     socketRef.current.on('disconnect', () => {

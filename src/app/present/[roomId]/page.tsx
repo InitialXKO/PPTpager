@@ -30,16 +30,12 @@ export default function PresentPage() {
 
   useEffect(() => {
     // 连接到WebSocket并加入房间
-    connect();
-    
-    const timer = setTimeout(() => {
+    connect(() => {
       if (roomId) {
         joinRoom(roomId, 'presenter');
         setShowQR(true);
       }
-    }, 1000);
-
-    return () => clearTimeout(timer);
+    });
   }, [roomId, connect, joinRoom]);
 
   useEffect(() => {
