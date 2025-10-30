@@ -18,6 +18,7 @@ export default function PresentPage() {
     connect,
     joinRoom,
     loadPresentation,
+    changeSlide,
     connectionState,
     presentation,
     currentSlide,
@@ -125,10 +126,7 @@ export default function PresentPage() {
             <SlideViewer
               presentation={presentation}
               currentSlide={currentSlide}
-              onSlideChange={(slideNumber) => {
-                // 幻灯片变化处理
-                console.log('切换到第', slideNumber, '页');
-              }}
+              onSlideChange={(slideNumber) => changeSlide('goto', slideNumber)}
             />
           ) : (
             <div className="flex items-center justify-center h-screen">
