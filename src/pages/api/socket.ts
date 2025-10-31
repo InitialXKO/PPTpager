@@ -1,14 +1,27 @@
 
-import { Server } from 'socket.io';
+import type { NextApiRequest, NextApiResponse } from 'next';
+import type { Server as HTTPServer } from 'http';
+import type { Socket } from 'net';
+import { Server as SocketIOServer } from 'socket.io';
 
 const rooms = new Map();
 const devices = new Map();
 
-const ioHandler = (req, res) => {
+type SocketServer = Socket & {
+  server: HTTPServer & {
+    io?: SocketIOServer;
+  };
+};
+
+type NextApiResponseWithSocket = NextApiResponse & {
+  socket: SocketServer;
+};
+
+const ioHandler = (req: NextApiRequest, res: NextApiResponseWithSocket) => {
   if (!res.socket.server.io) {
     console.log('*First use, starting socket.io');
 
-    const io = new Server(res.socket.server);
+    const io = new SocketIOServer(res.socket.server);
 
     io.on('connection', (socket) => {
       console.log('Client connected:', socket.id);
