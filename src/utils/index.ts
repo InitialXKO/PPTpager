@@ -56,12 +56,16 @@ export const storage = {
     }
   },
   
-  set: (key: string, value: any) => {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch {
-      console.warn('Failed to save to localStorage');
-    }
+  set: (key: string, value: any): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+        resolve();
+      } catch (error) {
+        console.warn('Failed to save to localStorage', error);
+        reject(error);
+      }
+    });
   },
   
   remove: (key: string) => {
