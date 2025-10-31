@@ -15,8 +15,8 @@ export default function ConnectionQR({ roomId, size = 200 }: ConnectionQRProps) 
     const generateQR = async () => {
       if (!canvasRef.current) return;
 
-      const currentUrl = window.location.href;
-      const connectionUrl = `${currentUrl}?room=${roomId}&mode=control`;
+      const baseUrl = `${window.location.protocol}//${window.location.host}`;
+      const connectionUrl = `${baseUrl}/control?room=${roomId}`;
       
       try {
         await QRCode.toCanvas(canvasRef.current, connectionUrl, {
