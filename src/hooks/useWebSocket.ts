@@ -207,8 +207,8 @@ export const useWebSocket = () => {
   }, [connectionState.roomId, connectionState.deviceId]);
 
   // 加载演示文稿
-  const loadPresentation = useCallback((presentationData: Presentation) => {
-    if (!socketRef.current?.connected || !connectionState.roomId) return;
+  const loadPresentation = useCallback((presentationData: Presentation, roomId: string) => {
+    if (!socketRef.current?.connected || !roomId) return;
 
     const maxIndex = presentationData.slides.length > 0 ? presentationData.slides.length - 1 : 0;
     const initialSlide = Math.max(0, Math.min(presentationData.currentSlide ?? 0, maxIndex));
@@ -220,7 +220,7 @@ export const useWebSocket = () => {
 
     const message: ControlMessage = {
       type: 'presentation_load',
-      roomId: connectionState.roomId,
+      roomId: roomId,
       deviceId: connectionState.deviceId,
       timestamp: Date.now(),
       data: {
@@ -232,7 +232,7 @@ export const useWebSocket = () => {
     presentationRef.current = normalizedPresentation;
     setPresentation(normalizedPresentation);
     setCurrentSlide(initialSlide);
-  }, [connectionState.roomId, connectionState.deviceId]);
+  }, [connectionState.deviceId]);
 
   // 断开连接
   const disconnect = useCallback(() => {
