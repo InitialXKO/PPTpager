@@ -29,26 +29,19 @@ export default function PresentPage() {
   const [connectionCount, setConnectionCount] = useState(0);
 
   useEffect(() => {
-    // 连接到WebSocket并加入房间
-    connect();
-    
-    const timer = setTimeout(() => {
+    const sessionData = storage.get('ppt_session');
+
+    connect(() => {
       if (roomId) {
         joinRoom(roomId, 'presenter');
         setShowQR(true);
+
+        if (sessionData?.presentation) {
+          loadPresentation(sessionData.presentation, roomId);
+        }
       }
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [roomId, connect, joinRoom]);
-
-  useEffect(() => {
-    // 加载演示文稿
-    const sessionData = storage.get('ppt_session');
-    if (sessionData?.presentation && roomId) {
-      loadPresentation(sessionData.presentation);
-    }
-  }, [roomId, loadPresentation]);
+    });
+  }, [roomId, connect, joinRoom, loadPresentation]);
 
   useEffect(() => {
     // 监听设备连接数变化

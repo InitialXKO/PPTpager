@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { generateRoomCode, generateDefaultPresentation } from '@/utils';
+import { generateRoomCode, generateDefaultPresentation, storage } from '@/utils';
 import { Play, Smartphone, Monitor, ArrowRight, Upload } from 'lucide-react';
 import PPTUploader from '@/components/PPTUploader';
 import { Presentation } from '@/types';
@@ -22,11 +22,8 @@ export default function HomePage() {
         createdAt: new Date().toISOString(),
       };
       
-      localStorage.setItem('ppt_session', JSON.stringify(sessionData));
-      
-      setTimeout(() => {
-        router.push(`/present/${roomCode}`);
-      }, 600);
+      await storage.set('ppt_session', sessionData);
+      router.push(`/present/${roomCode}`);
     } catch (error) {
       console.error('启动演示失败:', error);
       setIsLoading(false);
