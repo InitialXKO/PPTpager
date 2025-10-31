@@ -35,7 +35,8 @@ export const useWebSocket = () => {
     const deviceId = localStorage.getItem('deviceId') || generateDeviceId();
     localStorage.setItem('deviceId', deviceId);
 
-    socketRef.current = io({
+    const socketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || '';
+    socketRef.current = io(socketUrl, {
       transports: ['websocket'],
     });
 
